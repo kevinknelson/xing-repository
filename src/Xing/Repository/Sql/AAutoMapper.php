@@ -8,6 +8,7 @@ namespace Xing\Repository\Sql {
 	use Xing\Repository\AEntity;
 	use Xing\Repository\ASearch;
     use Xing\Repository\ISearch;
+    use Xing\Repository\PropertyMap\APropertyMap;
     use Xing\Repository\SearchOperation;
 	use Xing\Repository\SearchOperator;
     use Xing\Repository\Sql\ISqlQuery;
@@ -96,17 +97,29 @@ namespace Xing\Repository\Sql {
             }
         }
 		public function getSaveArrays( AEntity $entity ) {
-			$saveArray	= new SaveArray();
-			$saveArray->TableName	= $this->getTableName();
-			$saveArray->PrimaryKey	= $this->getPrimaryKey();
-
+			$saveArray  = new SaveArray($this->getTableName(),$this->getPrimaryKey());
 			$map		= $this->getColumnMap();
 			if( is_null($map) ) {
 				$saveArray->Columns		= $entity->asSerializable();
 			}
 			else {
 				foreach( $map AS $property => $column ) {
-					$saveArray->Columns[$column]	= $entity->{$property};
+                    if( $column instanceof APropertyMap ) {
+                        if( !is_null($column->Save) ) {
+                            /** @var mixed $propertyValue */
+                            eval("\$propertyValue = \$entity->{$property};"); // we use eval in case of something like $property == "User->Name"
+                            $result = call_user_func($column->Save,$propertyValue);
+                            if( is_array($result) ) {
+                                $saveArray->Columns  = array_merge($saveArray->Columns,$result);
+                            }
+                            else {
+                                $saveArray->Columns[$column->ColumnName]    = $result;
+                            }
+                        }
+                    }
+                    else {
+					    $saveArray->Columns[$column]	= $this->getProperty($entity, $property);
+                    }
 				}
 			}
 			return array( $saveArray );
@@ -121,12 +134,23 @@ namespace Xing\Repository\Sql {
 			}
 			else {
 				foreach( $map AS $property => $column ) {
-                    $prefixed   = is_null($this->_columnPrefix) ? $column : $this->_columnPrefix.$column;
-					$entity->{$property} = $arr[$prefixed];
+					$this->setProperty($entity, $property, $arr, $column);
 				}
 			}
 			return $entity;
 		}
+        private function setProperty( $entity, $property, $arr, $column ) {
+            $prefixed   = is_null($this->_columnPrefix) ? $column : $this->_columnPrefix.$column;
+            $value      = $column instanceof APropertyMap ? call_user_func($column->Load,$arr) : $arr[$prefixed];
+            $evalString = "\$entity->{$property} = \$value;"; // we use eval in case of something like $property == "User->Name"
+            eval($evalString);
+        }
+        private function getProperty( $entity, $property ) {
+            return eval("return \$entity->{$property};");
+        }
 
+        public function getDeleteQuery( ISqlQuery $query, AEntity $entity ) {
+            return $query->from($this->getTableName(),'T')->where($this->getPrimaryKey().'={0}',$entity->Id);
+        }
 	}
 }
