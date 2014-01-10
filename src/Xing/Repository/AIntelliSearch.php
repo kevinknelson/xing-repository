@@ -5,7 +5,6 @@
  * Licensed under the MIT license
  */
 namespace Xing\Repository {
-    use Xing\System\Collections\Dictionary;
     use Xing\System\Collections\KeyList;
     use Xing\System\Exception\UndefinedPropertyException;
 

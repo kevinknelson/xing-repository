@@ -6,18 +6,18 @@
  */
 
 use Xing\Repository\DbConfig;
-use Xing\Repository\Injector;
+use Xing\System\Locator;
 
 date_default_timezone_set('America/Chicago');
 spl_autoload_register( function( $class ) {
     require_once(__DIR__.'/'.str_replace('\\','/',$class.'.php'));
 });
-Injector::defineDependencies( array(
+Locator::defineServices( array(
     'ISqlQuery'             => '\Xing\Repository\Sql\SqliteQuery',
     'IRepository'           => '\Xing\Repository\Sql\SqlRepository',
     'Example\User\Mapper'   => '\Example\Mapper\UserMapper'
 ));
-Injector::disallowSingleton('ISqlQuery');
+Locator::disallowSingleton('ISqlQuery');
 
 DbConfig::instance()
         ->setDriver( DbConfig::Sqlite )

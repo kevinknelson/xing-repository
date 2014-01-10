@@ -18,6 +18,9 @@
          * @property-read UserSearch $Username
          */
         class UserSearch extends AIntelliSearch {
+            public static function instance() {
+                return new self();
+            }
             public function defineProperties() {
                 $this->_properties->addRange(array('Id','Email','Username'));
             }

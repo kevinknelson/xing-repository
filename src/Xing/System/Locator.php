@@ -4,15 +4,19 @@
  * @copyright 2013 Kevin K. Nelson (xingcreative.com)
  * Licensed under the MIT license
  */
-namespace Xing\Repository {
-    class Injector {
-        protected static $_dependencies     = array();
+namespace Xing\System {
+    /**
+     * Class Locator
+     * @package Xing\System
+     */
+    class Locator {
+        protected static $_services         = array();
         protected static $_noSingletons     = array();
         protected static $_singletons       = array();
 
         public static function get( $key ) {
             if( isset(self::$_noSingletons[$key]) ) {
-                throw new \Exception("Singleton not allowed for {$key}.  You must use Injector::getNew('{$key}')");
+                throw new \Exception("Singleton not allowed for {$key}.  You must use Locator::getNew('{$key}')");
             }
             if( !isset(self::$_singletons[$key]) ) {
                 self::$_singletons[$key] = self::getNew($key);
@@ -28,22 +32,22 @@ namespace Xing\Repository {
                     throw new \Exception("Undefined Dependency Injection: '{$key}'.");
                 }
             }
-            return new self::$_dependencies[$key]();
+            return new self::$_services[$key]();
         }
-        public static function defineDependency( $key, $namespace, $allowSingleton=true ) {
-            self::$_dependencies[$key]      = $namespace;
+        public static function defineService( $key, $namespace, $allowSingleton=true ) {
+            self::$_services[$key]      = $namespace;
             if( !$allowSingleton ) {
                 self::$_noSingletons[$key]  = true;
             }
         }
-        public static function defineDependencies( array $arr ) {
-            self::$_dependencies            = array_merge(self::$_dependencies,$arr);
+        public static function defineServices( array $arr ) {
+            self::$_services            = array_merge(self::$_services,$arr);
         }
         public static function disallowSingleton( $key ) {
             self::$_noSingletons[$key]      = true;
         }
         protected static function isDefined( $key ) {
-            return isset(self::$_dependencies[$key]);
+            return isset(self::$_services[$key]);
         }
     }
 }

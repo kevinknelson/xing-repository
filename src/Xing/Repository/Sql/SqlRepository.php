@@ -6,7 +6,7 @@
  */
 namespace Xing\Repository\Sql {
     use Xing\Repository\AEntity;
-    use Xing\Repository\Injector;
+    use Xing\System\Locator;
     use Xing\Repository\IRepository;
     use Xing\Repository\ISearch;
     use Xing\System\APropertiedObject;
@@ -16,12 +16,12 @@ namespace Xing\Repository\Sql {
      */
     class SqlRepository extends APropertiedObject implements  IRepository {
         public function get_SqlQuery() {
-            return Injector::getNew('ISqlQuery');
+            return Locator::getNew('ISqlQuery');
         }
         private function getMapper( AEntity $obj ) {
             $mapperName	= get_class($obj->entity()).'\Mapper';
             /** @var IMapQueries $mapper */
-            return Injector::get($mapperName);
+            return Locator::get($mapperName);
         }
         public function search( ISearch $searchObject ) {
             $model		= $searchObject->getModelInstance();
