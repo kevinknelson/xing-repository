@@ -5,6 +5,8 @@
  * Licensed under the MIT license
  */
 namespace Xing\System {
+    use Xing\System\DateTime\DateTime;
+
     class Format {
         /**
          * Format::string(string $str, params[] string $arr)

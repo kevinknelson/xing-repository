@@ -5,6 +5,8 @@
  * Licensed under the MIT license
  */
 namespace Xing\System {
+    use Xing\System\DateTime\DateTime;
+
     class Get {
         public static function nonEmpty() {
             $args = func_get_args();
