@@ -58,6 +58,15 @@ namespace Xing\System\Collections {
             return $newArray;
         }
 
+        public static function first( $array, $predicate ) {
+            foreach( $array AS $key => $value ) {
+                if( $predicate($value, $key) ) {
+                    return $value;
+                }
+            }
+            return null;
+        }
+
         public static function where( $array, $predicate ) {
             $newArray = array();
             foreach( $array AS $key => $value ) {

@@ -27,6 +27,10 @@ namespace Xing\System {
         public static function intOrDefault( $val, $default=null ) {
             return preg_match("/^\-?\d+/", $val) ? intval($val) : $default;
         }
+        public static function intRange( $val, $lowVal, $highVal, $default=null ) {
+            $value = self::intOrDefault($val,null);
+            return is_null($value) ? $default : ($value >= $lowVal && $value <= $highVal ? $value : $default);
+        }
         public static function floatOrDefault( $val, $default=null ) {
             return preg_match("/^\-?(\d+|\.\d+)/", $val) ? floatval($val) : $default;
         }

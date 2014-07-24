@@ -1,7 +1,7 @@
 <?php
 
 namespace Xing\Repository\PropertyMap {
-    use Xing\System\DateTime;
+    use Xing\System\DateTime\DateTime;
     use Xing\System\Get;
 
     class DateTimeMap extends APropertyMap {

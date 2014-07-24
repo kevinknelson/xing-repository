@@ -39,11 +39,18 @@ namespace Xing\Repository\Sql {
 		}
         public function getColumnSelect() {
             $map        = $this->getColumnMap();
+            if( is_null($map) ) { return '*'; }
+
             $alias      = empty($this->_tableAlias)     ? '' : $this->_tableAlias.'.';
             $colPrefix  = empty($this->_columnPrefix)   ? '' : $this->_columnPrefix;
-            return is_null($map) ? '*' : Xinq::join($map,',',function($val) use( $alias, $colPrefix ) {
-                return "{$alias}{$colPrefix}{$val}";
-            });
+            $result     = array();
+            foreach( $map AS $property ) {
+                $isMapProperty      = $property instanceof APropertyMap;
+                if( !$isMapProperty || !is_null($property->ColumnName) ) {
+                    $result[]       = $alias.$colPrefix.($isMapProperty ? $property->ColumnName : $property);
+                }
+            }
+            return implode(',',$result);
         }
         public function injectMap( $map ) {
 			$this->_injectedMap = $map;
