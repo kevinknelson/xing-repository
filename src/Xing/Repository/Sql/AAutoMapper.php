@@ -58,7 +58,6 @@ namespace Xing\Repository\Sql {
 		public function buildQuery( ISqlQuery $query, ISearch $search ) {
             $query->select( $this->getColumnSelect() )->from($this->getTableName());
             $this->applyOperations($query,$search->getOperations());
-            echo $query->getQuery();
             return $query;
 		}
         protected function applyOperations(ISqlQuery $query, $operations) {
