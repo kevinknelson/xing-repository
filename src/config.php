@@ -5,20 +5,30 @@
  * Licensed under the MIT license
  */
 
-use Xing\Repository\DbConfig;
-use Xing\System\Locator;
+    namespace {
+        use Xing\Repository\DbConfig;
+        use Xing\System\Exception\ErrorHandler;
+        use Xing\System\Http\Http;
+        use Xing\System\Locator;
 
-date_default_timezone_set('America/Chicago');
-spl_autoload_register( function( $class ) {
-    require_once(__DIR__.'/'.str_replace('\\','/',$class.'.php'));
-});
-Locator::defineServices( array(
-    'ISqlQuery'             => '\Xing\Repository\Sql\SqliteQuery',
-    'IRepository'           => '\Xing\Repository\Sql\SqlRepository',
-    'Example\User\Mapper'   => '\Example\Mapper\UserMapper'
-));
-Locator::disallowSingleton('ISqlQuery');
+        date_default_timezone_set('UTC');
+        spl_autoload_register( function( $class ) {
+            require_once(__DIR__.'/'.str_replace('\\','/',$class.'.php'));
+        });
 
-DbConfig::instance()
-        ->setDriver( DbConfig::Sqlite )
-        ->setConfig('data/example.db','user','pass');
+        error_reporting(E_ALL);
+        set_error_handler(ErrorHandler::getErrorHandler(),E_ALL);
+
+        Http::configure( __DIR__."/../" );
+
+        Locator::defineServices( array(
+            'IRepository'           => 'Xing\Repository\Sql\SqlRepository',
+            'ISqlQuery'             => 'Xing\Repository\Sql\MySqlQuery',
+            'IRouter'               => 'Xing\Mvc\SimpleJsonRouter',
+            'Example\User\Mapper'   => '\Example\Mapper\UserMapper'
+        ) );
+
+        DbConfig::instance()
+                ->setDriver( DbConfig::Sqlite )
+                ->setConfig('data/example.db','user','pass');
+    }

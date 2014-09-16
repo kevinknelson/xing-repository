@@ -29,5 +29,8 @@
                 $bits = $bits instanceof ABitwise ? $bits->Value : $bits;
 				$this->_value &= ~intval($bits);
 			}
+            public function asSerializable() {
+                return $this->_value;
+            }
         }
     }

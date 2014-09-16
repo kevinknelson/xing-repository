@@ -15,21 +15,8 @@
 				}
 				return self::$_basePath;
 			}
-			public static function isOldIE() {
-				return preg_match('/(?i)msie [6-8]/',$_SERVER['HTTP_USER_AGENT']);
-			}
             public static function isPostBack() {
                 return strtoupper($_SERVER['REQUEST_METHOD']) == 'POST';
-            }
-            public static function header($name) {
-                if( !function_exists('apache_request_headers') ) { return null; }
-                $headers    = apache_request_headers();
-                foreach( $headers AS $key => $value ) {
-                    if( strtolower($key) == strtolower($name) ) {
-                        return $value;
-                    }
-                }
-                return null;
             }
             public static function get($name,$default=NULL) {
                 return isset($_GET[$name]) ? $_GET[$name] : $default;

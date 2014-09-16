@@ -22,5 +22,8 @@ namespace Xing\System {
         public function __toString() {
             return (string) $this->Value;
         }
+        public static function parseValue( $value ) {
+            return is_object($value) && isset($value->Value) ? $value->Value : $value;
+        }
     }
 }

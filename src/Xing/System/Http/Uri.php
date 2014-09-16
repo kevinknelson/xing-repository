@@ -6,7 +6,7 @@
 
         /**
          * Class Uri
-         * @package Entouch\System
+         * @package Xing\System
          *
          * @property-read string $Path
          * @property-read string $UriParts

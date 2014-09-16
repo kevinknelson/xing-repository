@@ -120,54 +120,58 @@ namespace Xing\System\DateTime {
          * @return DateTime
          */
         public function addYears( $yearsToAdd ) {
-            $newDate = clone $this;
-            $newDate->setDate($this->Year + $yearsToAdd, $this->Month, $this->Day);
-            return $newDate;
+            return $this->atDate($this->Year + $yearsToAdd, $this->Month, $this->Day);
         }
         /**
          * @param $monthsToAdd
          * @return DateTime
          */
         public function addMonths( $monthsToAdd ) {
-            $newDate = clone $this;
-            $newDate->setDate($this->Year, $this->Month + $monthsToAdd, $this->Day);
-            return $newDate;
+            return $this->atDate($this->Year, $this->Month + $monthsToAdd, $this->Day);
+        }
+        /**
+         * @param $weeksToAdd
+         * @return DateTime
+         */
+        public function addWeeks( $weeksToAdd ) {
+            return $this->addDays( $weeksToAdd * 7 );
         }
         /**
          * @param $daysToAdd
          * @return DateTime
          */
         public function addDays( $daysToAdd ) {
-            $newDate = clone $this;
-            $newDate->setDate($this->Year, $this->Month, $this->Day + $daysToAdd);
-            return $newDate;
+            $hoursToAdd     = $this->fractionMultiplier($daysToAdd,24);
+            $minutesToAdd   = $this->fractionMultiplier($hoursToAdd,60);
+            $secondsToAdd   = $this->fractionMultiplier($minutesToAdd,60);
+            $result         = $this->atDate($this->Year, $this->Month, $this->Day + $daysToAdd); //immutable
+            if( $hoursToAdd<>0 || $minutesToAdd<>0 || $secondsToAdd<>0 ) {
+                $result->setTime($result->Hours+$hoursToAdd,$result->Minutes+$minutesToAdd,$result->Seconds+$secondsToAdd); //mutable
+            }
+            return $result;
         }
         /**
          * @param $hoursToAdd
          * @return DateTime
          */
         public function addHours( $hoursToAdd ) {
-            $newDate = clone $this;
-            $newDate->setTime($this->Hours + $hoursToAdd, $this->Minutes, $this->Seconds);
-            return $newDate;
+            $minutesToAdd       = $this->fractionMultiplier($hoursToAdd,60);
+            $secondsToAdd       = $this->fractionMultiplier($minutesToAdd,60);
+            return $this->atTime($this->Hours + $hoursToAdd, $this->Minutes + $minutesToAdd, $this->Seconds + $secondsToAdd);
         }
         /**
          * @param $minutesToAdd
          * @return DateTime
          */
         public function addMinutes( $minutesToAdd ) {
-            $newDate = clone $this;
-            $newDate->setTime($this->Hours, $this->Minutes + $minutesToAdd, $this->Seconds);
-            return $newDate;
+            return $this->atTime($this->Hours, $this->Minutes + $minutesToAdd, $this->Seconds + $this->fractionMultiplier($minutesToAdd,60));
         }
         /**
          * @param $secondsToAdd
          * @return DateTime
          */
         public function addSeconds( $secondsToAdd ) {
-            $newDate = clone $this;
-            $newDate->setTime($this->Hours, $this->Minutes, $this->Seconds + $secondsToAdd);
-            return $newDate;
+            return $this->atTime($this->Hours, $this->Minutes, $this->Seconds + $secondsToAdd);
         }
         #endregion
 
@@ -184,9 +188,6 @@ namespace Xing\System\DateTime {
         #endregion
 
         #region MAGIC METHODS
-        public function __toString() {
-            return $this->format("Y-m-d H:i:s");
-        }
         public function __get( $var ) {
             $method = "get_{$var}";
             if( method_exists($this, $method) ) {
@@ -219,10 +220,18 @@ namespace Xing\System\DateTime {
             }
             return false;
         }
+        public function __toString() {
+            return $this->format("Y-m-d H:i:s");
+        }
         #endregion
 
         public function asSerializable() {
-            return $this->format('r');
+            return $this->format('c');
+        }
+        /** When we add 1.2 hours to a time, we need to turn the .2 */
+        private function fractionMultiplier($number,$multiplier) {
+            $floor  = floor($number);
+            return ($number - $floor) * $multiplier;
         }
     }
 }

@@ -47,12 +47,9 @@ namespace Xing\System {
             return is_null($bool) ? null : ($bool ? 1 : 0);
         }
         public static function dateTimeOrDefault( $val, $default = null ) {
-            if( $val instanceof DateTime ) {
-                 return $val;
-            }
-            else {
-                return empty($val) ? $default : new DateTime($val);
-            }
+             return $val instanceof DateTime
+                 ? $val
+                 : (empty($val) ? $default : new DateTime($val));
         }
 
     }

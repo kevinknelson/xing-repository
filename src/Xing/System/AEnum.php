@@ -49,6 +49,9 @@ namespace Xing\System {
         public function __toString() {
             return (string) $this->_value;
         }
+        public function asSerializable() {
+            return array('Value'=>$this->_value,'Description'=>$this->Description);
+        }
 
         /**
          * @return Collection|AEnum[]
