@@ -11,6 +11,8 @@ namespace Xing\Repository {
     abstract class AIntelliSearch implements ISearch {
 		protected $_operations;
         protected $_properties;
+        protected $_limit;
+        protected $_limitOffset;
         protected $_key;
 
 		protected function defineProperties() {
@@ -32,7 +34,24 @@ namespace Xing\Repository {
         public function __set( $varName, $value ) {
             throw new \Exception('Write properties not allowed for AIntelliSearch');
         }
+        public function getLimit() {
+            return $this->_limit;
+        }
+        public function getLimitOffset() {
+            return $this->_limitOffset;
+        }
 
+        #region QUERY-BUILDING/CHAIN-ABLE METHODS
+        public function page( $itemsPerPage, $pageNumber ) {
+            $this->_limitOffset = (($pageNumber ?: 1)-1) * $itemsPerPage;
+            $this->_limit       = $itemsPerPage;
+            return $this;
+        }
+        public function limit( $count, $offset=0 ) {
+            $this->_limit       = $count;
+            $this->_limitOffset = $offset;
+            return $this;
+        }
 		public function is( $value, $ignoreNullValues=false ) {
 			if( !is_null($value) || !$ignoreNullValues ) {
 				$this->addOperation( SearchOperator::IsEqualTo(), $this->_key, $value );
@@ -108,5 +127,6 @@ namespace Xing\Repository {
 			$this->_operations[]	= new SearchOperation(SearchOperator::GroupPreviousOrNext());
 			return $this;
 		}
+		#endregion
     }
 }

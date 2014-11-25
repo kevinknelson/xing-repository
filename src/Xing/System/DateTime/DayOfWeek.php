@@ -10,6 +10,14 @@ namespace Xing\System\DateTime {
     /**
      * @method static DayOfWeek[] getCollection()
      * @property-read string $Abbreviation
+     *
+     * @method static DayOfWeek Sunday()
+     * @method static DayOfWeek Monday()
+     * @method static DayOfWeek Tuesday()
+     * @method static DayOfWeek Wednesday()
+     * @method static DayOfWeek Thursday()
+     * @method static DayOfWeek Friday()
+     * @method static DayOfWeek Saturday()
      */
     class DayOfWeek extends AEnum {
         const Sunday    = 0;
@@ -20,22 +28,20 @@ namespace Xing\System\DateTime {
         const Friday    = 5;
         const Saturday  = 6;
 
-        /**
-         * @param int $value
-         * @return DayOfWeek
-         */
-        public static function getPreviousDay( $value ) {
-            return new self($value == self::Sunday ? self::Saturday : $value-1);
-        }
-        /**
-         * @param int $value
-         * @return DayOfWeek
-         */
-        public static function getNextDay( $value ) {
-            return new self($value == self::Saturday ? self::Sunday : $value+1);
-        }
         public static function today() {
             return DateTime::Now()->DayOfWeek;
+        }
+        /**
+         * @return DayOfWeek
+         */
+        public function previous() {
+            return new self($this->Value == self::Sunday ? self::Saturday : $this->Value-1);
+        }
+        /**
+         * @return DayOfWeek
+         */
+        public function next() {
+            return new self($this->Value == self::Saturday ? self::Sunday : $this->Value+1);
         }
         public function get_Abbreviation() {
             switch( $this->_value ) {

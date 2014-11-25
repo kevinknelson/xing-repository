@@ -24,15 +24,15 @@ namespace Xing\System {
             return self::$_singletons[$key];
         }
         public static function getNew( $key ) {
-            if( !self::isDefined($key) ) {
-                try {
+            try {
+                if( !self::isDefined($key) ) {
                     return new $key();
                 }
-                catch( \Exception $ex ) {
-                    throw new \Exception("Undefined Dependency Injection: '{$key}'.");
-                }
+                return new self::$_services[$key]();
             }
-            return new self::$_services[$key]();
+            catch( \Exception $ex ) {
+                throw new \Exception("Undefined Dependency Injection: '{$key}'.");
+            }
         }
         public static function defineService( $key, $namespace, $allowSingleton=true ) {
             self::$_services[$key]      = $namespace;
@@ -46,7 +46,7 @@ namespace Xing\System {
         public static function disallowSingleton( $key ) {
             self::$_noSingletons[$key]      = true;
         }
-        protected static function isDefined( $key ) {
+        public static function isDefined( $key ) {
             return isset(self::$_services[$key]);
         }
     }
