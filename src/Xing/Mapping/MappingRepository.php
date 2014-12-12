@@ -1,20 +1,24 @@
 <?php
 /**
- * @package Xing\Repository
+ * @package Xing\Mapping
  * @copyright 2013 Kevin K. Nelson (xingcreative.com)
  * Licensed under the MIT license
  */
-namespace Xing\Repository\Sql {
-    use Xing\Repository\AEntity;
+namespace Xing\Mapping {
+    use Xing\Mapping\Sql\ISqlQuery;
+    use Xing\Models\Entity\AEntity;
+    use Xing\Models\Search\ISearch;
     use Xing\System\Locator;
-    use Xing\Repository\IRepository;
-    use Xing\Repository\ISearch;
-    use Xing\System\APropertiedObject;
 
     /**
      * @property ISqlQuery $SqlQuery
      */
-    class MappingRepository extends APropertiedObject implements IRepository {
+    class MappingRepository implements IRepository {
+        /**
+         * @param $modelObject
+         * @return IRepository
+         * @throws \Exception
+         */
         public static function getMapper( $modelObject ) {
             $namespace    = get_class($modelObject);
             $mapperKey    = $namespace.'\Mapper';
@@ -31,18 +35,23 @@ namespace Xing\Repository\Sql {
         }
         public function search( ISearch $searchObject ) {
             $mapper     = $this->getMapper($searchObject->getModelInstance());
+            return $mapper->search($searchObject);
         }
         public function exists( ISearch $searchObject ) {
             $mapper     = $this->getMapper($searchObject->getModelInstance());
+            return $mapper->exists($searchObject);
         }
         public function count( ISearch $searchObject ) {
             $mapper     = $this->getMapper($searchObject->getModelInstance());
+            return $mapper->count($searchObject);
         }
         public function deleteWhere( ISearch $searchObject ) {
             $mapper     = $this->getMapper($searchObject->getModelInstance());
+            $mapper->deleteWhere($searchObject);
         }
         public function save( AEntity $entity ) {
             $mapper     = $this->getMapper($entity);
+            $mapper->save($entity);
         }
         public function remove( AEntity $entity ) {
             $mapper     = $this->getMapper($entity);

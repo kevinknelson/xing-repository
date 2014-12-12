@@ -1,12 +1,10 @@
 <?php
 /**
- * @package Xing\Repository
+ * @package Xing\Models\Search
  * @copyright 2013 Kevin K. Nelson (xingcreative.com)
  * Licensed under the MIT license
  */
-namespace Xing\Repository {
-	use Xing\System\AEnum;
-
+namespace Xing\Models\Search {
 	class SearchOperation {
 		public $Operator;
 		public $Key;

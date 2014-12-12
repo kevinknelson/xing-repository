@@ -9,6 +9,14 @@ namespace Xing\System\Serialization {
 
 	class JsonSerializer {
         public static function encode( $data ) {
+            if( version_compare(phpversion(),'5.4.0','>=') ) {
+                return json_encode($data);
+            }
+            else {
+                return self::legacyEncode($data);
+            }
+        }
+        protected static function legacyEncode( $data ) {
             if( is_array($data) && is_int(key($data)) ) {
                 return '[' . Xinq::join($data, ',', function( $value, $key ) {
                     return JsonSerializer::encode($value);

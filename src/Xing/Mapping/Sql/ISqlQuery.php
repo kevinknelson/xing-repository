@@ -1,12 +1,10 @@
 <?php
 /**
- * @package Xing\Repository
+ * @package Xing\Mapping\Sql
  * @copyright 2013 Kevin K. Nelson (xingcreative.com)
  * Licensed under the MIT license
  */
-namespace Xing\Repository\Sql {
-    use Xing\Repository\AEntity;
-    use Xing\System\Format;
+namespace Xing\Mapping\Sql {
 
     /**
      * ISqlQuery is an interface for the dynamic building of queries based on methods
@@ -78,16 +76,30 @@ namespace Xing\Repository\Sql {
         public function andWhereIn( $sql, array $value=null );
         /**
          * @param string $sql
-         * @param array $value
+         * @param mixed $param1
+         * @param mixed $param2
          * @return ISqlQuery
          */
-        public function orWhereIn( $sql, array $value=null );
+        public function andWhereBetween( $sql, $param1, $param2 );
         /**
          * @param string $sql
          * @param mixed $value
          * @return ISqlQuery
          */
         public function orWhere( $sql, $value );
+        /**
+         * @param string $sql
+         * @param array $value
+         * @return ISqlQuery
+         */
+        public function orWhereIn( $sql, array $value=null );
+        /**
+         * @param string $sql
+         * @param mixed $param1
+         * @param mixed $param2
+         * @return ISqlQuery
+         */
+        public function orWhereBetween( $sql, $param1, $param2 );
         /**
          * @return ISqlQuery
          */
@@ -132,12 +144,7 @@ namespace Xing\Repository\Sql {
          */
         public function paged( $pageNumber, $rowsPerPage=50 );
 
-        /**
-         * @param AEntity        $obj
-         * @param IMapSaveArrays $mapper
-         * @return mixed
-         */
-        public function save( AEntity $obj, IMapSaveArrays $mapper );
+        public function saveArray( $tableName, $primaryKeyName, $columns );
         /**
          * @param string $tableName
          * @param string $primaryKeyName
@@ -145,18 +152,13 @@ namespace Xing\Repository\Sql {
          * @return ISqlQuery
          */
         public function remove( $tableName, $primaryKeyName, $id );
-        /**
-         * @param AEntity $obj
-         * @param IMapToEntities $mapper
-         * @return \Xing\Repository\EntityCollection
-         */
-        public function getCollection( AEntity $obj, IMapToEntities $mapper );
 
         /**
          * @param null $primaryKey
          * @return int
          */
         public function getCount($primaryKey=null);
+        public function exists();
         /**
          * @return array
          */

@@ -1,10 +1,10 @@
 <?php
 /**
- * @package Xing\Repository
+ * @package Xing\Models\Search
  * @copyright 2013 Kevin K. Nelson (xingcreative.com)
  * Licensed under the MIT license
  */
-namespace Xing\Repository {
+namespace Xing\Models\Search {
     use Xing\System\Collections\KeyList;
     use Xing\System\Exception\UndefinedPropertyException;
 

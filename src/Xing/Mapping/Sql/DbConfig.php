@@ -4,7 +4,7 @@
  * @copyright 2013 Kevin K. Nelson (xingcreative.com)
  * Licensed under the MIT license
  */
-namespace Xing\Repository {
+namespace Xing\Mapping\Sql {
     use Xing\System\APropertiedObject;
     use Xing\System\Collections\ValidationErrors;
 

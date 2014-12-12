@@ -1,7 +1,7 @@
 <?php
 
     namespace Xing\Mvc {
-        use Xing\Repository\IRepository;
+        use Xing\Mapping\IRepository;
         use Xing\System\Collections\DictionaryCast;
         use Xing\System\Http\Uri;
         use Xing\System\Locator;

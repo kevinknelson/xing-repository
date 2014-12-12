@@ -1,11 +1,12 @@
 <?php
 /**
- * @package Xing\Repository
+ * @package Xing\Mapping
  * @copyright 2013 Kevin K. Nelson (xingcreative.com)
  * Licensed under the MIT license
  */
-namespace Xing\Repository {
-    use Xing\Repository\AEntity;
+namespace Xing\Mapping {
+    use Xing\Models\Entity\AEntity;
+    use Xing\Models\Search\ISearch;
     use Xing\System\Collections\Collection;
 
     interface IRepository {

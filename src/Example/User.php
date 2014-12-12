@@ -6,7 +6,7 @@
      * Licensed under the MIT license
      */
     namespace Example {
-        use Xing\Repository\AEntity;
+        use Xing\Models\Entity\AEntity;
 
         class User extends AEntity {
             protected $_id;

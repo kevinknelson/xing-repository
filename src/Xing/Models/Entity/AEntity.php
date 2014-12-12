@@ -1,10 +1,10 @@
 <?php
 /**
- * @package Xing\Repository
+ * @package Xing\Models\Entity
  * @copyright 2013 Kevin K. Nelson (xingcreative.com)
  * Licensed under the MIT license
  */
-namespace Xing\Repository {
+namespace Xing\Models\Entity {
     use Xing\System\APropertiedObject;
 
     /**

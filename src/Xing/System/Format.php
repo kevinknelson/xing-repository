@@ -5,7 +5,9 @@
  * Licensed under the MIT license
  */
 namespace Xing\System {
+    use DateTimeZone;
     use Xing\System\DateTime\DateTime;
+    use Xing\System\DateTime\Timezone;
 
     class Format {
         /**
@@ -51,8 +53,11 @@ namespace Xing\System {
             $format	= $format ?: 'h:ia';
             return is_null($hours) ? '' : DateTime::now()->setTime($hours,$minutes)->format($format);
         }
-        public static function dateTime( $date, $format, $defaultValue=null ) {
-            $parsed = $date instanceof \DateTime ? $date : Get::dateTimeOrDefault($date,null);
+        public static function dateTime( $date, $format, DateTimeZone $timezone=null, $defaultValue=null ) {
+            $parsed = $date instanceof \DateTime ? clone $date : Get::dateTimeOrDefault($date,$timezone);
+            if( !is_null($parsed) && !is_null($timezone) ) {
+                $parsed->setTimezone( Timezone::Utc()->PhpTimezone );
+            }
             return is_null($parsed) ? $defaultValue : $parsed->format($format);
         }
         public static function toUpperCamelCase( $string ) {

@@ -18,7 +18,7 @@
             private $_postData;
 
             public function __construct( $uri ) {
-                $uriParts           = explode('?',str_replace( Http::basePath(), '', $_SERVER['REQUEST_URI'] ));
+                $uriParts           = explode('?',str_replace( Http::basePath(), '', $uri ));
                 $queryString        = isset($uriParts[1]) ? $uriParts[1] : '';
                 $this->_path        = $uriParts[0];
                 $this->_params      = array();

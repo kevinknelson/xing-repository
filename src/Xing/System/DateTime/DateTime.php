@@ -270,11 +270,14 @@
             #endregion
 
             public function asSerializable() {
-                return $this->format('r');
+                return $this->format('c');
             }
             private function fractionMultiplier($number,$multiplier) {
                 $floor  = floor($number);
                 return ($number - $floor) * $multiplier;
+            }
+            function jsonSerialize() {
+                return $this->asSerializable();
             }
         }
     }

@@ -6,7 +6,7 @@
  */
 
     namespace {
-        use Xing\Repository\DbConfig;
+        use Xing\Mapping\Sql\DbConfig;
         use Xing\System\Exception\ErrorHandler;
         use Xing\System\Http\Http;
         use Xing\System\Locator;
@@ -22,8 +22,8 @@
         Http::configure( __DIR__."/../" );
 
         Locator::defineServices( array(
-            'IRepository'           => 'Xing\Repository\Sql\SqlRepository',
-            'ISqlQuery'             => 'Xing\Repository\Sql\MySqlQuery',
+            'IRepository'           => 'Xing\Mapping\MappingRepository',
+            'ISqlQuery'             => 'Xing\Mapping\Sql\MySqlQuery',
             'IRouter'               => 'Xing\Mvc\SimpleJsonRouter',
             'Example\User\Mapper'   => '\Example\Mapper\UserMapper'
         ) );

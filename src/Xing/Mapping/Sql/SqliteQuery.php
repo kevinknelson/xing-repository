@@ -1,22 +1,24 @@
 <?php
 /**
- * @package Xing\Repository
+ * @package Xing\Mapping\Sql
  * @copyright 2013 Kevin K. Nelson (xingcreative.com)
  * Licensed under the MIT license
+ *
+ * @todo This is a direct copy from the MySqlQuery.  However, I'm sure
+ * there are differences that need to be addressed.  It appears that LIMIT
+ * and GROUP BY are similar, but I've never really used Sqlite, so I'm
+ * guessing that there will be more fixes needed.
  */
-namespace Xing\Repository\Sql {
+namespace Xing\Mapping\Sql {
     use PDO;
-    use Xing\Repository\AEntity;
-    use Xing\Repository\DbConfig;
-    use Xing\Repository\EntityCollection;
     use Xing\System\Collections\Xinq;
     use Xing\System\APropertiedObject;
-    use Xing\System\Format;
+    use Xing\System\Exception\SqlException;
 
     /**
      * @property-read PDO $Pdo;
      */
-    class MySqlQuery extends APropertiedObject implements ISqlQuery {
+    class SqliteQuery extends APropertiedObject implements ISqlQuery {
         const AND_TYPE = 1;
         const OR_TYPE  = 2;
 
@@ -115,12 +117,24 @@ namespace Xing\Repository\Sql {
             $this->_currentWhereList[] = $this->getJoiner("AND") . str_replace("{0}",is_null($value) ? 'NULL' : $this->escapeImplode($value), $sql);
             return $this;
         }
-        public function orWhereIn( $sql, array $value=null ) {
-            $this->_currentWhereList[] = $this->getJoiner("OR") . str_replace("{0}",is_null($value) ? 'NULL' : $this->escapeImplode($value), $sql);
+        public function andWhereBetween( $sql, $param1, $param2 ) {
+            $sql        = str_replace("{0}", $this->Pdo->quote((string) $param1), $sql);
+            $sql        = str_replace("{1}", $this->Pdo->quote((string) $param2), $sql);
+            $this->_currentWhereList[] = $this->getJoiner("AND") . $sql;
             return $this;
         }
         public function orWhere( $sql, $value ) {
             $this->_currentWhereList[]   = $this->getJoiner("OR").str_replace("{0}",is_null($value) ? 'NULL' : $this->Pdo->quote((string)$value),$sql);
+            return $this;
+        }
+        public function orWhereIn( $sql, array $value=null ) {
+            $this->_currentWhereList[] = $this->getJoiner("OR") . str_replace("{0}",is_null($value) ? 'NULL' : $this->escapeImplode($value), $sql);
+            return $this;
+        }
+        public function orWhereBetween( $sql, $param1, $param2 ) {
+            $sql        = str_replace("{0}", $this->Pdo->quote((string) $param1), $sql);
+            $sql        = str_replace("{1}", $this->Pdo->quote((string) $param2), $sql);
+            $this->_currentWhereList[] = $this->getJoiner("OR") . $sql;
             return $this;
         }
         public function groupAnd() {
@@ -172,21 +186,6 @@ namespace Xing\Repository\Sql {
             return $this;
         }
         #endregion
-
-        public function getCollection( AEntity $obj, IMapToEntities $mapper ) {
-            $collection = EntityCollection::create(array());
-            $results = $this->getPdoResult();
-            if( $results !== false ) {
-                foreach( $results AS $row ) {
-                    $instance	= $mapper->loadEntity(clone $obj,$row);
-                    if( $instance instanceof AEntity ) {
-                        $instance->setDbLoadingComplete();
-                    }
-                    $collection->add($instance);
-                }
-            }
-            return $collection;
-        }
         public function getCount( $primaryKey=null ) {
             $this->buildWhere();
             $count	= is_null($primaryKey) ? 'COUNT(*)' : "COUNT(DISTINCT {$this->_fromAlias}.{$primaryKey})";
@@ -195,6 +194,16 @@ namespace Xing\Repository\Sql {
             $sql   .= empty($this->_where)          ? '' : "\r\nWHERE {$this->_where}\r\n";
 
             return (int) $this->Pdo->query($sql)->fetchColumn();
+        }
+        public function exists() {
+            $this->buildWhere();
+            $sql    = "SELECT EXISTS( SELECT 1 FROM {$this->_from} {$this->_fromAlias}\r\n";
+            $sql   .= count($this->_leftJoins)==0   ? '' : implode("\r\n ",$this->_leftJoins)."\r\n";
+            $sql   .= empty($this->_where)          ? '' : "\r\nWHERE {$this->_where}\r\n";
+            $sql   .= ")";
+
+            $result = $this->Pdo->query($sql)->fetchColumn();
+            return !empty($result);
         }
         public function getArray() {
             $collection = array();
@@ -211,17 +220,7 @@ namespace Xing\Repository\Sql {
             $sql        = $this->getQuery();
             return $this->Pdo->query($sql, PDO::FETCH_ASSOC);
         }
-        public function save( AEntity $obj, IMapSaveArrays $mapper ) {
-            $saveArrays	= $mapper->getSaveArrays($obj);
-
-            foreach( $saveArrays AS $saveArray ) {
-                $this->saveArray( $saveArray->TableName, $saveArray->PrimaryKeyName, $saveArray->Columns );
-                if( is_callable($saveArray->setPrimaryKey) ) {
-                    call_user_func($saveArray->setPrimaryKey,$this->Pdo->lastInsertId());
-                }
-            }
-        }
-        protected function saveArray( $table, $primaryKey, $arr ) {
+        public function saveArray( $table, $primaryKey, $arr ) {
             $command    = 'INSERT INTO';
             $where      = '';
             $cols       = array();

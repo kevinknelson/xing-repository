@@ -52,5 +52,8 @@ namespace Xing\System {
             }
             return $result;
         }
+        public function jsonSerialize() {
+            return $this->asSerializable();
+        }
     }
 }

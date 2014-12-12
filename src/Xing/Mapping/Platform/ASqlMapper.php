@@ -1,52 +1,92 @@
 <?php
 /**
- * @package Xing\Repository
+ * @package Xing\Mapping\Platform
  * @copyright 2013 Kevin K. Nelson (xingcreative.com)
  * Licensed under the MIT license
  */
-namespace Xing\Mapping {
-
-    use Xing\Mapping\PropertyMap\IPropertyMap;
-    use Xing\Mapping\PropertyMap\PropertyMap;
-    use Xing\Repository\AEntity;
-    use Xing\Repository\AIntelliSearch;
-    use Xing\Repository\ISearch;
-    use Xing\Repository\SearchOperation;
-    use Xing\Repository\SearchOperator;
-    use Xing\Repository\Sql\ISqlQuery;
+namespace Xing\Mapping\Platform {
+    use Xing\Mapping\IRepository;
+    use Xing\Mapping\PropertyMap\APropertyMap;
+    use Xing\Mapping\Sql\ISqlQuery;
+    use Xing\Models\Entity\AEntity;
+    use Xing\Models\Search\AIntelliSearch;
+    use Xing\Models\Entity\EntityCollection;
+    use Xing\Models\Search\ISearch;
+    use Xing\Models\Search\SearchOperation;
+    use Xing\Models\Search\SearchOperator;
     use Xing\System\Collections\Collection;
     use Xing\System\Locator;
 
-    abstract class ASqlMapper extends ABaseMapper {
-        /** @var ISqlQuery */
-        protected $_query;
-        protected $_pdo;
+    /**
+     * Class ASqlMapper
+     * @package Xing\Mapping\Platform
+     *
+     * @property-read ISqlQuery $SqlQuery
+     */
+    abstract class ASqlMapper implements IRepository {
+        /** @var APropertyMap[] $_map */
         protected $_map         = null;
 
-        final private function __construct() {
+        final public function __construct() {
             $this->_map         = $this->getPropertyMap();
-            $this->_query       = Locator::get('Xing\Repository\Sql\MySqlQuery');
-            $this->_pdo         = $this->_query->Pdo;
         }
         public function init() {}
+
+        /**
+         * @return APropertyMap[]
+         */
         abstract public function getPropertyMap();
+        /**
+         * @return string
+         */
         abstract public function getTableName();
+        /**
+         * @return string
+         */
         abstract public function getPrimaryKey();
+        /**
+         * @return string
+         */
+        abstract public function getTableAlias();
 
-        public function buildQuery( ISearch $searchObject ) {
+        public function buildQuery( ISearch $search ) {
+            $query      = $this->getNewSqlQuery()->select( $this->getColumnList() )->from( $this->getTableName(), $this->getTableAlias() );
 
+            if( $search instanceof AIntelliSearch ) {
+                $this->applyOperations($query, $search->getOperations());
+                $query->limit( $search->getLimit(), $search->getLimitOffset() );
+            }
+
+            return $query;
         }
         /**
          * @param $searchObject
          * @return AEntity[]|Collection
          */
         public function search( ISearch $searchObject ) {
-            $this->_query->select('*')->from( $this->getTableName(), 'T' );
+            $query          = $this->buildQuery($searchObject);
+            $collection     = EntityCollection::create(array());
+            $results        = $query->getPdoResult();
+            $model          = $searchObject->getModelInstance();
 
-            if( $searchObject instanceof AIntelliSearch ) {
-                $this->applyOperations($this->_query, $searchObject->getOperations());
-                $this->_query->limit( $searchObject->getLimit(), $searchObject->getLimitOffset() );
+            if( $results !== false ) {
+                foreach( $results AS $row ) {
+                    $instance	= $this->loadEntity(clone $model, $row);
+                    if( $instance instanceof AEntity ) {
+                        $instance->setDbLoadingComplete();
+                    }
+                    $collection->add($instance);
+                }
             }
+            return $collection;
+        }
+        public function loadEntity( AEntity $entity, array $arr ) {
+            foreach( $this->_map AS $property => $map ) {
+                if( $map->isReadable() ) {
+                    $entity->{$property}     = $map->fromDbValue($arr);
+                }
+            }
+            return $entity;
         }
 
         /**
@@ -54,7 +94,8 @@ namespace Xing\Mapping {
          * @return bool
          */
         public function exists( ISearch $searchObject ) {
-            // TODO: Implement exists() method.
+            $query  = $this->buildQuery($searchObject);
+            return $query->getCount() > 0;
         }
 
         /**
@@ -62,7 +103,8 @@ namespace Xing\Mapping {
          * @return int
          */
         public function count( ISearch $searchObject ) {
-            // TODO: Implement count() method.
+            $query  = $this->buildQuery($searchObject);
+            return $query->getCount();
         }
 
         /**
@@ -70,7 +112,13 @@ namespace Xing\Mapping {
          * @return void
          */
         public function save( AEntity $entity ) {
-            // TODO: Implement save() method.
+            $columns        = array();
+            foreach( $this->_map AS $property => $map ) {
+                if( $map->isWritable() ) {
+                    $columns[$map->getColumnName()]  = $map->toDbValue($entity->{$property});
+                }
+            }
+            $this->getNewSqlQuery()->saveArray($this->getTableName(), $this->getPrimaryKey(), $columns);
         }
 
         /**
@@ -78,7 +126,7 @@ namespace Xing\Mapping {
          * @return void
          */
         public function remove( AEntity $entity ) {
-            // TODO: Implement remove() method.
+            $this->getNewSqlQuery()->from( $this->getTableName(), $this->getTableAlias() )->where($this->getPrimaryKey().'={0}',$entity->Id)->delete();
         }
 
         /**
@@ -86,10 +134,11 @@ namespace Xing\Mapping {
          * @return void
          */
         public function deleteWhere( ISearch $searchObject ) {
-            // TODO: Implement deleteWhere() method.
+            $query  = $this->buildQuery($searchObject);
+            $query->delete();
         }
         protected function applyOperations(ISqlQuery $query, $operations, $map=null) {
-			$map				= $map ?: $this->getPropertyMap();
+			$map				= $map ?: $this->_map;
             $currentLogical     = SearchOperator::AndNext();
             foreach( $operations AS $operation ) {
                 /** @var $operation SearchOperation */
@@ -105,33 +154,69 @@ namespace Xing\Mapping {
 					$currentLogical	= SearchOperator::OrNext();
 				}
 				else {
-                    $isInType       = $operation->Operator->isIn(SearchOperator::IsInSet,SearchOperator::IsNotInSet);
                     $column         = is_null($map) ? $operation->Key : $map[$operation->Key];
-                    $columnName     = $column instanceof IPropertyMap ? $column->getColumnNameForQuery() : $column;
-                    $sqlOperator    = $this->getSqlOperator($operation->Operator,$operation->Value);
-                    $sql            = is_null($operation->Value) ? "{$columnName} IS NULL" : (
-                                        $isInType
-                                        ? "{$columnName} {$sqlOperator} ({0})"
-                                        : "{$columnName} {$sqlOperator} {0}"
-                                    );
-                    $method         = $currentLogical->Value == SearchOperator::AndNext
-                                    ? ($isInType ? 'andWhereIn' : 'andWhere')
-                                    : ($isInType ? 'orWhereIn'  : 'orWhere');
-                    call_user_func( array($query,$method),$sql, is_null($operation->Value) ? true : $operation->Value );
+                    $columnName     = $column instanceof APropertyMap ? $column->getColumnNameForQuery() : $column;
+
+                    if( $operation->Operator->isIn(SearchOperator::IsBetween) ) {
+                        if( !is_array($operation->Value) || count($operation->Value) != 2 ) {
+                            throw new \InvalidArgumentException("Between Search requires an array parameter with exactly two values");
+                        }
+                        list( $param1, $param2 )    = $operation->Value;
+                        if( is_null($param1) || is_null($param2) ) {
+                            throw new \InvalidArgumentException("Neither argument in a Between Search can be NULL");
+                        }
+                        $method                     = $currentLogical->Value == SearchOperator::AndNext ? 'andWhereBetween' : 'orWhereBetween';
+                        call_user_func( array($query,$method), "{$columnName} BETWEEN {0} AND {1}", $param1, $param2);
+
+                    }
+                    else {
+                        $isInType       = $operation->Operator->isIn(SearchOperator::IsInSet,SearchOperator::IsNotInSet);
+                        $sqlOperator    = $this->getSqlOperator($operation->Operator,$operation->Value);
+                        $sql            = is_null($operation->Value) ? "{$columnName} IS NULL" : (
+                                            $isInType
+                                            ? "{$columnName} {$sqlOperator} ({0})"
+                                            : "{$columnName} {$sqlOperator} {0}"
+                                        );
+                        $method         = $currentLogical->Value == SearchOperator::AndNext
+                                        ? ($isInType ? 'andWhereIn' : 'andWhere')
+                                        : ($isInType ? 'orWhereIn'  : 'orWhere');
+                        call_user_func( array($query,$method),$sql, is_null($operation->Value) ? true : $operation->Value );
+                    }
                 }
             }
         }
         protected function getSqlOperator( SearchOperator $searchOperator, $value ) {
             switch( $searchOperator->Value ) {
-                case SearchOperator::IsEqualTo:     return is_null($value) ? 'IS' : '=';
-                case SearchOperator::IsNotEqualTo:  return is_null($value) ? 'IS NOT' : '<>';
-                case SearchOperator::IsInSet:       return 'IN';
-                case SearchOperator::IsNotInSet:    return 'NOT IN';
-                case SearchOperator::IsGreaterThan: return '>';
+                case SearchOperator::IsNotEqualTo:           return is_null($value) ? 'IS NOT' : '<>';
+                case SearchOperator::IsInSet:                return 'IN';
+                case SearchOperator::IsNotInSet:             return 'NOT IN';
+                case SearchOperator::IsGreaterThan:          return '>';
                 case SearchOperator::IsGreaterThanOrEqualTo: return '>=';
-                case SearchOperator::IsLessThan:    return '<';
-                case SearchOperator::IsLessThanOrEqualTo: return '<=';
+                case SearchOperator::IsLessThan:             return '<';
+                case SearchOperator::IsLessThanOrEqualTo:    return '<=';
+                case SearchOperator::IsBetween:              return 'BETWEEN';
+                case SearchOperator::IsEqualTo:
+                default:                                     return is_null($value) ? 'IS' : '=';
             }
+        }
+        /**
+         * @return ISqlQuery
+         * @throws \Exception
+         */
+        protected function getNewSqlQuery() {
+            return Locator::getNew('ISqlQuery');
+        }
+        /**
+         * @return string
+         */
+        protected function getColumnList() {
+            $list   = array();
+            foreach( $this->_map AS $map ) {
+                if( $map->isReadable() ) {
+                    $list[] = $map->getColumnNameForQuery();
+                }
+            }
+            return implode(',',$list);
         }
     }
 }

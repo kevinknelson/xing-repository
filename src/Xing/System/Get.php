@@ -5,6 +5,7 @@
  * Licensed under the MIT license
  */
 namespace Xing\System {
+    use DateTimeZone;
     use Xing\System\DateTime\DateTime;
 
     class Get {
@@ -46,10 +47,17 @@ namespace Xing\System {
             $bool = self::boolOrDefault($val);
             return is_null($bool) ? null : ($bool ? 1 : 0);
         }
-        public static function dateTimeOrDefault( $val, $default = null ) {
+
+        /**
+         * @param DateTime|string   $val
+         * @param DateTimeZone      $timezone
+         * @param mixed|null        $default
+         * @return null|DateTime
+         */
+        public static function dateTimeOrDefault( $val, DateTimeZone $timezone=null, $default = null ) {
              return $val instanceof DateTime
-                 ? $val
-                 : (empty($val) ? $default : new DateTime($val));
+                 ? $val->atTimezone($timezone)
+                 : (empty($val) ? $default : new DateTime($val, $timezone));
         }
 
     }

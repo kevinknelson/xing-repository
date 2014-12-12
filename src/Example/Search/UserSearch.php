@@ -7,7 +7,7 @@
      */
     namespace Example\Search {
         use Example\User;
-        use Xing\Repository\AIntelliSearch;
+        use Xing\Models\Search\AIntelliSearch;
 
         /**
          * Class UserSearch
