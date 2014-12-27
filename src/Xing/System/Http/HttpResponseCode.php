@@ -5,7 +5,7 @@
 
         /**
          * Class HttpResponseCode
-         * @package EnTouch\System\Http
+         * @package Xing\System\Http
          *
          * @method static HttpResponseCode BadRequest()
          * @method static HttpResponseCode Unauthorized()
