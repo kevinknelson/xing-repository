@@ -1,14 +1,11 @@
 <?php
 
     namespace Xing\System\Traits {
-        use Xing\System\AValueType;
         use Xing\System\Exception\ReadOnlyPropertyException;
         use Xing\System\Exception\UndefinedPropertyException;
         use Xing\System\Exception\WriteOnlyPropertyException;
-        use Xing\System\Format;
 
         trait PropertiedTrait {
-
             public function __get( $var ) {
                 $method = "get_{$var}";
                 if( method_exists($this, $method) ) {
@@ -40,15 +37,6 @@
                     return !is_null($value);
                 }
                 return false;
-            }
-            public function asSerializable() {
-                $members		= get_object_vars($this);
-                $result			= array();
-                foreach( $members AS $member => $value ) {
-                    $property	        = Format::toUpperCamelCase($member);
-                    $result[$property]	= $value instanceof AValueType ? $value->Value : $value;
-                }
-                return $result;
             }
         }
     }

@@ -13,9 +13,11 @@ namespace Xing\System {
         /**
          * Format::string(string $str, params[] string $arr)
          * @static
+         * @param string $string
+         * @param string ...$var
          * @return string
          */
-        public static function string() {
+        public static function string($string) {
             $args   = func_get_args();
             $string = array_shift($args);
             for( $i=0; $i < count($args); $i++ ) {
